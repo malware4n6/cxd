@@ -23,44 +23,17 @@ References:
 import argparse
 import logging
 import sys
+from colorama import just_fix_windows_console
 
 from cxd import __version__
 
 __author__ = "malware4n6"
 __copyright__ = "malware4n6"
-__license__ = "MIT"
+__license__ = "The Unlicense"
 
 _logger = logging.getLogger(__name__)
 
-
-# ---- Python API ----
-# The functions defined in this section can be imported by users in their
-# Python scripts/interactive interpreter, e.g. via
-# `from cxd.skeleton import fib`,
-# when using this Python module as a library.
-
-
-def fib(n):
-    """Fibonacci example function
-
-    Args:
-      n (int): integer
-
-    Returns:
-      int: n-th Fibonacci number
-    """
-    assert n > 0
-    a, b = 1, 1
-    for _i in range(n - 1):
-        a, b = b, a + b
-    return a
-
-
-# ---- CLI ----
-# The functions defined in this section are wrappers around the main Python
-# API allowing them to be called directly from the terminal as a CLI
-# executable/script.
-
+from cxd.colored_hex_dump import ColoredHexDump, ColorRange
 
 def parse_args(args):
     """Parse command line parameters
@@ -72,31 +45,15 @@ def parse_args(args):
     Returns:
       :obj:`argparse.Namespace`: command line parameters namespace
     """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="cxd {ver}".format(ver=__version__),
-    )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="loglevel",
-        help="set loglevel to INFO",
-        action="store_const",
-        const=logging.INFO,
-    )
-    parser.add_argument(
-        "-vv",
-        "--very-verbose",
-        dest="loglevel",
-        help="set loglevel to DEBUG",
-        action="store_const",
-        const=logging.DEBUG,
-    )
+    parser = argparse.ArgumentParser(description="Colored Hex Dump")
+    parser.add_argument("--version", action="version", version="cxd {ver}".format(ver=__version__))
+    parser.add_argument("-d", "--data", help="path to some data", type=str)
+    parser.add_argument("-r", "--ranges", help="path to ranges. Each line contains 'offset_start,count'", type=str)
+    parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
+                        action="store_const", const=logging.INFO)
+    parser.add_argument("-vv", "--very-verbose", dest="loglevel", help="set loglevel to DEBUG",
+                        action="store_const", const=logging.DEBUG)
     return parser.parse_args(args)
-
 
 def setup_logging(loglevel):
     """Setup basic logging
@@ -111,20 +68,24 @@ def setup_logging(loglevel):
 
 
 def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
-
-    Instead of returning the value from :func:`fib`, it prints the result to the
-    ``stdout`` in a nicely formatted message.
-
+    """
     Args:
       args (List[str]): command line parameters as list of strings
           (for example  ``["--verbose", "42"]``).
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
-    _logger.info("Script ends here")
+    just_fix_windows_console()
+    _logger.debug("Starting display...")
+    ranges = [ColorRange(0, 10, 'red'),
+                ColorRange(10, 10, 'green'),
+                ColorRange(20, 10, 'blue')]
+    # colors can be found here: https://pypi.org/project/termcolor/
+    cxd = ColoredHexDump(ranges, chunk_length=16)
+    with open(args.data, 'rb') as fd:
+        data = fd.read()
+    cxd.print(data)
+    _logger.info("Ending display...")
 
 
 def run():

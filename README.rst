@@ -33,11 +33,17 @@
 cxd
 ===
 
+    Colored heX Dump
 
-    Add a short description here!
+WIP: setup
+==========
 
-
-A longer description of your project goes here...
+..  code-block:: sh
+    python3 -m venv venv
+    . venv/bin/activate
+    # putup cxd
+    cd cxd
+    pip install -e .
 
 
 .. _pyscaffold-notes:
