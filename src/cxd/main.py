@@ -23,6 +23,7 @@ References:
 import argparse
 import logging
 import sys
+from pathlib import Path
 from colorama import just_fix_windows_console
 
 from cxd import __version__
@@ -48,7 +49,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="Colored Hex Dump")
     parser.add_argument("--version", action="version", version="cxd {ver}".format(ver=__version__))
     parser.add_argument("-d", "--data", help="path to some data", type=str)
-    parser.add_argument("-r", "--ranges", help="path to ranges. Each line contains 'offset_start,count'", type=str)
+    parser.add_argument("-c", "--colors", help="path to colors ranges. Each line contains 'offset_start,count,color'", type=str)
     parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
                         action="store_const", const=logging.INFO)
     parser.add_argument("-vv", "--very-verbose", dest="loglevel", help="set loglevel to DEBUG",
@@ -66,6 +67,42 @@ def setup_logging(loglevel):
         level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
     )
 
+def read_colors_ranges(colors_file):
+    colors_path = Path(colors_file)
+    if not colors_path.exists() or not colors_path.is_file():
+        _logger.fatal(f'Colors ranges can not be read from {colors_file}')
+        sys.exit(0)
+    ret = []
+    with colors_path.open('r') as fd:
+        for curline in fd.readlines():
+            curline = curline.strip()
+            if curline:
+                _logger.debug(f'{curline=}')
+                body = curline.split(',')
+                _logger.debug(body)
+                start = body[0]
+                if '0x' in start:
+                    start = int(start, 16)
+                else:
+                    start = int(start)
+
+                length = body[1]
+                if '0x' in length:
+                    length = int(length, 16)
+                else:
+                    length = int(length)
+
+                if len(body) == 2:
+                    ret.append(ColorRange(start, length))
+                elif len(body) == 3:
+                    color = body[2]
+                    if color in ColoredHexDump.ALLOWED_COLORS:
+                        ret.append(ColorRange(start, length, color))
+                    else:
+                        _logger.info(f'Incorrect line due to color: {curline}')
+                else:
+                    _logger.info(f'Incorrect line: {curline}')
+    return ret
 
 def main(args):
     """
@@ -75,13 +112,19 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
+
+    if args.colors:
+        ranges = read_colors_ranges(args.colors)
+    else:
+        ranges = [ColorRange(0, 4, 'red'),
+                ColorRange(4, 4, 'green'),
+                ColorRange(8, 4, 'blue')]
     just_fix_windows_console()
-    _logger.debug("Starting display...")
-    ranges = [ColorRange(0, 10, 'red'),
-                ColorRange(10, 10, 'green'),
-                ColorRange(20, 10, 'blue')]
+
     # colors can be found here: https://pypi.org/project/termcolor/
-    cxd = ColoredHexDump(ranges, chunk_length=16)
+    cxd = ColoredHexDump(ranges=ranges, chunk_length=16, address_shift=0, # -0x0100,
+                        default_color='white', shadow_color='dark_grey',
+                        address_color='cyan', enable_shadow_bytes=True)
     with open(args.data, 'rb') as fd:
         data = fd.read()
     cxd.print(data)
