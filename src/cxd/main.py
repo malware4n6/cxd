@@ -61,7 +61,7 @@ def setup_logging(loglevel):
     Args:
       loglevel (int): minimum loglevel for emitting messages
     """
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    logformat = "[%(asctime)s] %(levelname)s\t%(name)s\t%(message)s"
     logging.basicConfig(
         level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
     )
@@ -85,7 +85,6 @@ def main(args):
     with open(args.data, 'rb') as fd:
         data = fd.read()
     cxd.print(data)
-    _logger.info("Ending display...")
 
 
 def run():
