@@ -38,6 +38,7 @@ cxd
 WIP: setup
 ==========
 
+
 ..  code-block:: sh
     python3 -m venv venv
     . venv/bin/activate
