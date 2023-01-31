@@ -13,15 +13,10 @@
     .. image:: https://img.shields.io/pypi/v/cxd.svg
         :alt: PyPI-Server
         :target: https://pypi.org/project/cxd/
-    .. image:: https://img.shields.io/conda/vn/conda-forge/cxd.svg
-        :alt: Conda-Forge
-        :target: https://anaconda.org/conda-forge/cxd
     .. image:: https://pepy.tech/badge/cxd/month
         :alt: Monthly Downloads
         :target: https://pepy.tech/project/cxd
-    .. image:: https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter
-        :alt: Twitter
-        :target: https://twitter.com/cxd
+
 
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
@@ -35,17 +30,54 @@ cxd
 
     Colored heX Dump
 
-WIP: setup
-==========
+Setup
+=====
 
 
 ..  code-block:: sh
+
     python3 -m venv venv
     . venv/bin/activate
     # putup cxd
     cd cxd
     pip install -e .
+    # for offline locations
+    # pip wheel . --wheel-dir /path
 
+
+Usage
+=====
+
+#. Optional. Define a coloration scheme (read src/cxd/sample_colors_ranges.txt if you need an example)
+
+Columns are under the format 'start,length[,color]'
+
+   * start and length must be decimal or hexadecimal integers
+   * if provided, color must be in "black red green yellow blue magenta cyan white light_grey dark_grey light_red light_green light_yellow light_blue light_magenta light_cyan".
+   These colors are the ones defined in https://pypi.org/project/termcolor/
+
+#. Use ``cxd``:
+
+..  code-block:: sh
+
+    cxd -d path/to/binary/file -c src/cxd/sample_colors_ranges.txt
+
+
+#. If you want to integrate ``cxd`` in your Python code:
+
+..  code-block:: python
+
+    from colorama import just_fix_windows_console
+    from cxd.colored_hex_dump import ColoredHexDump, ColorRange
+    import string
+
+    # for Windows
+    just_fix_windows_console()
+    
+    # define your colors ranges
+    ranges = [ColorRange(0, 4, 'red'), ColorRange(4, 4, 'green'), ColorRange(8, 4, 'blue')]
+    cxd = ColoredHexDump(ranges=ranges, chunk_length=16)
+    cxd.print(string.printable.encode())
 
 .. _pyscaffold-notes:
 
