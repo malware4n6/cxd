@@ -69,36 +69,41 @@ class ColoredHexDump():
         _logger.debug(f'Color for {offset=}: {ret}')
         return ret
 
+    def __print_chunk(self, addr: int, chunk: bytes, chunk_offset: int):
+        # addr is the address displayed in the first column of the output
+        # self.address_shift is not added in the function
+        # chunk_offset is the offset of the chunk in a larger binary object
+
+        # print address column and separator
+        print(colored(f'{addr:08x}', self.address_color), end='')
+        print(self.column_separator, end='')
+
+        # generate ascii content
+        # hex chars are print directly
+        ascii_content = ''
+        raw_ascii_content = ''
+        # iterate over each byte value in the chunk
+        for i, c in enumerate(chunk):
+            color = self.__get_color_for_offset(chunk_offset + i, c)
+            print(colored(f'{c:02X}', color), end='')
+            print(' ', end='')
+            if chr(c) in self.printable:
+                raw_ascii_content += chr(c)
+                ascii_content += colored(f'{chr(c)}', color)
+            else:
+                raw_ascii_content += self.replace_not_printable
+                ascii_content += colored(f'{self.replace_not_printable}', color)
+
+        # handle the last line so that the columns are OK
+        if len(raw_ascii_content) != self.chunk_length:
+            print(3*(self.chunk_length - len(raw_ascii_content))*' ', end='')
+        print(self.column_separator, end='')
+        print(ascii_content, end='')
+        # end of the line!
+        print()
+
     def print(self, data: bytes):
-
-        for data_offset_i in range(0, len(data), self.chunk_length):
-            chunk = data[data_offset_i:data_offset_i + self.chunk_length]
-            addr = self.address_shift + data_offset_i
-
-            # print address column and separator
-            print(colored(f'{addr:08x}', self.address_color), end='')
-            print(self.column_separator, end='')
-
-            # generate ascii content
-            # hex chars are print directly
-            ascii_content = ''
-            raw_ascii_content = ''
-            # iterate over each byte value in the chunk
-            for i, c in enumerate(chunk):
-                color = self.__get_color_for_offset(data_offset_i + i, c)
-                print(colored(f'{c:02X}', color), end='')
-                print(' ', end='')
-                if chr(c) in self.printable:
-                    raw_ascii_content += chr(c)
-                    ascii_content += colored(f'{chr(c)}', color)
-                else:
-                    raw_ascii_content += self.replace_not_printable
-                    ascii_content += colored(f'{self.replace_not_printable}', color)
-
-            # handle the last line so that the columns are OK
-            if len(raw_ascii_content) != self.chunk_length:
-                print(3*(self.chunk_length - len(raw_ascii_content))*' ', end='')
-            print(self.column_separator, end='')
-            print(ascii_content, end='')
-            # end of the line!
-            print()
+        for chunk_offset in range(0, len(data), self.chunk_length):
+            chunk = data[chunk_offset:chunk_offset + self.chunk_length]
+            addr = self.address_shift + chunk_offset
+            self.__print_chunk(addr, chunk, chunk_offset)
