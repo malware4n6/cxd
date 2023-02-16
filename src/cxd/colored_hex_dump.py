@@ -26,9 +26,12 @@ class ColoredHexDump():
     ALLOWED_COLORS = 'black red green yellow blue magenta cyan white light_grey dark_grey light_red light_green light_yellow light_blue light_magenta light_cyan'.split()
 
     def __init__(self, ranges=None, chunk_length: int=32, replace_not_printable:str='.', column_separator:str='\t', address_shift:int=0,
-                default_color:str='white', shadow_color:str='dark_grey', address_color:str='cyan', enable_shadow_bytes=True,
+                default_color:str='white', shadow_color:str='dark_grey', address_color:str='cyan', title_color:str='dark_grey',
+                enable_shadow_bytes=True,
                 hide_null_lines=True, stop_at_first_color_found=True,
-                memorize_last_color_range=True) -> None:
+                memorize_last_color_range=True,
+                show_columns_name_at_start=True,
+                show_columns_name_at_end=True) -> None:
         self.color_ranges = [] if ranges is None else ranges
         self.chunk_length = chunk_length
         assert self.chunk_length > 0
@@ -43,6 +46,8 @@ class ColoredHexDump():
         assert self.shadow_color in ColoredHexDump.ALLOWED_COLORS
         self.address_color = address_color
         assert self.address_color in ColoredHexDump.ALLOWED_COLORS
+        self.title_color = title_color
+        assert self.title_color in ColoredHexDump.ALLOWED_COLORS
         # bytes with these values will be colored with self.shadow_color
         self.shadow_bytes = (0x0, )
         self.enable_shadow_bytes = enable_shadow_bytes
@@ -56,6 +61,8 @@ class ColoredHexDump():
         # this may be a problem if the user modify self.color_ranges (i.e out of bound index)
         self.memorize_last_color_range = memorize_last_color_range
         self.start_color_ranges = 0
+        self.show_columns_name_at_start = show_columns_name_at_start
+        self.show_columns_name_at_end = show_columns_name_at_end
 
     def __get_color_for_offset(self, offset:int, x,
                                             stop_at_first_color_found):
@@ -117,11 +124,23 @@ class ColoredHexDump():
         # end of the line!
         print()
 
+    def __print_columns_names(self):
+        print(colored(f'  Offset', self.title_color), end='')
+        print(self.column_separator, end='')
+        for i in range(self.chunk_length):
+            print(colored(f'{i:02X}', self.title_color), end='')
+            print(' ', end='')
+        print(self.column_separator)
+
     def print(self, data: bytes):
+        if self.show_columns_name_at_start:
+            self.__print_columns_names()
         for chunk_offset in range(0, len(data), self.chunk_length):
             chunk = data[chunk_offset:chunk_offset + self.chunk_length]
             addr = self.address_shift + chunk_offset
             self.__print_chunk(addr, chunk, chunk_offset)
+        if self.show_columns_name_at_end:
+            self.__print_columns_names()
 
     def print_file(self, filepath: str):
         path = Path(filepath)
@@ -131,6 +150,8 @@ class ColoredHexDump():
         
         with path.open('rb') as fd:
             offset = 0
+            if self.show_columns_name_at_start:
+                self.__print_columns_names()
             while True:
                 chunks = fd.read(4096) # self.chunk_length)
                 if not chunks:
@@ -145,3 +166,5 @@ class ColoredHexDump():
                 # addr = self.address_shift + offset
                 # self.__print_chunk(addr, chunk, offset)
                 # offset += len(chunk)
+            if self.show_columns_name_at_end:
+                self.__print_columns_names()
