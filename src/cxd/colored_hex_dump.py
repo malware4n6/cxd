@@ -4,7 +4,7 @@
 
 import logging
 import string
-
+from pathlib import Path
 from termcolor import colored
 
 __author__ = "malware4n6"
@@ -26,7 +26,9 @@ class ColoredHexDump():
     ALLOWED_COLORS = 'black red green yellow blue magenta cyan white light_grey dark_grey light_red light_green light_yellow light_blue light_magenta light_cyan'.split()
 
     def __init__(self, ranges=None, chunk_length: int=32, replace_not_printable:str='.', column_separator:str='\t', address_shift:int=0,
-                default_color:str='white', shadow_color:str='dark_grey', address_color:str='cyan', enable_shadow_bytes=True) -> None:
+                default_color:str='white', shadow_color:str='dark_grey', address_color:str='cyan', enable_shadow_bytes=True,
+                hide_null_lines=True, stop_at_first_color_found=True,
+                memorize_last_color_range=True) -> None:
         self.color_ranges = [] if ranges is None else ranges
         self.chunk_length = chunk_length
         assert self.chunk_length > 0
@@ -44,18 +46,30 @@ class ColoredHexDump():
         # bytes with these values will be colored with self.shadow_color
         self.shadow_bytes = (0x0, )
         self.enable_shadow_bytes = enable_shadow_bytes
+        # if hide_null_lines is set and 
+        self.hide_null_lines = hide_null_lines
+        # if multiple ranges contain an offset, the user decides whether
+        # the first or the last must be selected
+        self.stop_at_first_color_found = stop_at_first_color_found
+        # if ranges are ordered, do not lose time to search across all the ranges
+        # and start only from the last range
+        # this may be a problem if the user modify self.color_ranges (i.e out of bound index)
+        self.memorize_last_color_range = memorize_last_color_range
+        self.start_color_ranges = 0
 
-    def __get_color_for_offset(self, offset:int, x):
+    def __get_color_for_offset(self, offset:int, x,
+                                            stop_at_first_color_found):
         # x is not a byte because of the use of `enumerate`
-        # TODO improve search
-        # currently the **last** color found among self.color_ranges is applied
         ret = None
 
-        # no break as the **last** range is chosen
-        # in case of an offset belongs to multiple ranges
-        for r in self.color_ranges:
-            if r.start <= offset and offset <= r.end:
-                ret = r.color
+        for range_index, color_range in enumerate(self.color_ranges[self.start_color_ranges:],
+                                                start=self.start_color_ranges):
+            if color_range.start <= offset and offset <= color_range.end:
+                ret = color_range.color
+                if self.memorize_last_color_range:
+                    self.start_color_ranges = range_index
+                if stop_at_first_color_found:
+                    break
 
         # if belongs to a range -> provided color is chosen first
         # if not in a range:
@@ -84,7 +98,8 @@ class ColoredHexDump():
         raw_ascii_content = ''
         # iterate over each byte value in the chunk
         for i, c in enumerate(chunk):
-            color = self.__get_color_for_offset(chunk_offset + i, c)
+            color = self.__get_color_for_offset(chunk_offset + i, c,
+                                                self.stop_at_first_color_found)
             print(colored(f'{c:02X}', color), end='')
             print(' ', end='')
             if chr(c) in self.printable:
@@ -107,3 +122,26 @@ class ColoredHexDump():
             chunk = data[chunk_offset:chunk_offset + self.chunk_length]
             addr = self.address_shift + chunk_offset
             self.__print_chunk(addr, chunk, chunk_offset)
+
+    def print_file(self, filepath: str):
+        path = Path(filepath)
+        if not path.exists() or not path.is_file():
+            _logger.error(f'Check {filepath} is a file')
+            return
+        
+        with path.open('rb') as fd:
+            offset = 0
+            while True:
+                chunks = fd.read(4096) # self.chunk_length)
+                if not chunks:
+                    break
+                for chunk_offset in range(0, len(chunks), self.chunk_length):
+                    chunk = chunks[chunk_offset:chunk_offset + self.chunk_length]
+                    addr = self.address_shift + offset + chunk_offset
+
+                    self.__print_chunk(addr, chunk, offset + chunk_offset)
+                offset += len(chunks)
+
+                # addr = self.address_shift + offset
+                # self.__print_chunk(addr, chunk, offset)
+                # offset += len(chunk)

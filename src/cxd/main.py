@@ -124,10 +124,12 @@ def main(args):
     # colors can be found here: https://pypi.org/project/termcolor/
     cxd = ColoredHexDump(ranges=ranges, chunk_length=16, address_shift=0, # -0x0100,
                         default_color='white', shadow_color='dark_grey',
-                        address_color='cyan', enable_shadow_bytes=True)
+                        address_color='cyan', enable_shadow_bytes=True,
+                        hide_null_lines=True)
     with open(args.data, 'rb') as fd:
         data = fd.read()
     cxd.print(data)
+    # cxd.print_file(args.data)
 
 
 def run():
