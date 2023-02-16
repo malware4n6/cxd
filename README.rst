@@ -79,6 +79,15 @@ Or if you want to integrate ``cxd`` in your Python code:
     cxd = ColoredHexDump(ranges=ranges, chunk_length=16)
     cxd.print(string.printable.encode())
 
+Parsers
+=======
+
+For the moment, only one parser exists, and it uses the excellent project https://github.com/erocarrera/pefile
+
+..  code-block:: sh
+
+    pip install cxd[parsers]
+
 
 Test
 ====
@@ -87,6 +96,7 @@ Test
 
     pip install cxd[testing]
     pytest
+
 
 .. _pyscaffold-notes:
 

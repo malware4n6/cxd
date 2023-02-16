@@ -20,6 +20,8 @@ class ColorRange():
         self.color = color
         # -1 because (start + length) define the first next excluded byte
         self.end = start + length - 1
+    def __str__(self):
+        return f'{self.start},{self.length},{self.color if self.color else ""}'
 
 class ColoredHexDump():
     # colors can be found here: https://pypi.org/project/termcolor/
