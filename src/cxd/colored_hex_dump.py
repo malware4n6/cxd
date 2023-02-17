@@ -53,8 +53,10 @@ class ColoredHexDump():
         # bytes with these values will be colored with self.shadow_color
         self.shadow_bytes = (0x0, )
         self.enable_shadow_bytes = enable_shadow_bytes
-        # if hide_null_lines is set and 
+        # if hide_null_lines is set we replace the line by "ADDR *" 
         self.hide_null_lines = hide_null_lines
+        self.__content_to_hide = bytes(chunk_length)
+        self.__hide_mode = False
         # if multiple ranges contain an offset, the user decides whether
         # the first or the last must be selected
         self.stop_at_first_color_found = stop_at_first_color_found
@@ -91,6 +93,11 @@ class ColoredHexDump():
                 ret = self.default_color
         _logger.debug(f'Color for {offset=}: {ret}')
         return ret
+
+    def __print_snip(self, addr: int):
+        print(colored(f'{addr:08x}', self.address_color), end='')
+        print(self.column_separator, end='')
+        print('*')
 
     def __print_chunk(self, addr: int, chunk: bytes, chunk_offset: int):
         # addr is the address displayed in the first column of the output
@@ -140,7 +147,18 @@ class ColoredHexDump():
         for chunk_offset in range(0, len(data), self.chunk_length):
             chunk = data[chunk_offset:chunk_offset + self.chunk_length]
             addr = self.address_shift + chunk_offset
-            self.__print_chunk(addr, chunk, chunk_offset)
+            # print(len(data), chunk_offset, ((len(data) - chunk_offset)//self.chunk_length))
+            if self.hide_null_lines and chunk_offset != 0 and ((len(data) - chunk_offset)//self.chunk_length) not in (0, 1):
+                # check only if option is enabled and it's not the first or last line of the dump
+                if chunk == self.__content_to_hide:
+                    if not self.__hide_mode:
+                        self.__hide_mode = True
+                        self.__print_snip(addr)
+                else:
+                    self.__hide_mode = False
+                    self.__print_chunk(addr, chunk, chunk_offset)
+            else:
+                self.__print_chunk(addr, chunk, chunk_offset)
         if self.show_columns_name_at_end:
             self.__print_columns_names()
 
