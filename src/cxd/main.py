@@ -34,7 +34,12 @@ __license__ = "The Unlicense"
 
 _logger = logging.getLogger(__name__)
 
-from cxd.colored_hex_dump import ColoredHexDump, ColorRange
+from cxd.colored_hex_dump import ColoredHexDump
+from cxd.color_range import ColorRange
+
+def import_plugins():
+    from cxd.parsers.loader import load_parsers
+    return load_parsers()
 
 def parse_args(args):
     """Parse command line parameters
@@ -49,7 +54,11 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="Colored Hex Dump")
     parser.add_argument("--version", action="version", version="cxd {ver}".format(ver=__version__))
     parser.add_argument("-d", "--data", help="path to some data", type=str)
-    parser.add_argument("-c", "--colors", help="path to colors ranges. Each line contains 'offset_start,count,color'", type=str)
+    parser.add_argument("-c", "--colors",
+                        help="path to colors ranges. Each line contains 'offset_start,count,color[,comment]'",
+                        type=str)
+    parser.add_argument("-p", "--parser", help="parser to use. Takes precedence over option colors", type=str)
+    parser.add_argument("-po", "--parser-output", help="location to store parser output", type=str)
     parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
                         action="store_const", const=logging.INFO)
     parser.add_argument("-vv", "--very-verbose", dest="loglevel", help="set loglevel to DEBUG",
@@ -68,6 +77,7 @@ def setup_logging(loglevel):
     )
 
 def read_colors_ranges(colors_file):
+    # TODO: improve parsing, maybe using `csv` package
     colors_path = Path(colors_file)
     if not colors_path.exists() or not colors_path.is_file():
         _logger.fatal(f'Colors ranges can not be read from {colors_file}')
@@ -94,14 +104,15 @@ def read_colors_ranges(colors_file):
 
                 if len(body) == 2:
                     ret.append(ColorRange(start, length))
-                elif len(body) == 3:
+                elif len(body) >= 3:
                     color = body[2]
                     if color in ColoredHexDump.ALLOWED_COLORS:
                         ret.append(ColorRange(start, length, color))
                     else:
                         _logger.info(f'Incorrect line due to color: {curline}')
-                else:
-                    _logger.info(f'Incorrect line: {curline}')
+                    # comment field is not considered. if needed, the file
+                    # being self-explanatory, one can read it to understand
+                    # its own comment
     return ret
 
 def main(args):
@@ -113,12 +124,35 @@ def main(args):
     args = parse_args(args)
     setup_logging(args.loglevel)
 
-    if args.colors:
-        ranges = read_colors_ranges(args.colors)
+    ranges = None
+    if args.parser:
+        parsers = import_plugins()
+        _logger.info(f'{parsers=}')
+        if args.parser not in parsers.keys():
+            _logger.error(f'Parser {args.parser} does not exist. Available: {", ".join(parsers.keys())}')
+            return
+        _logger.info(f'Parser {args.parser} found')
+        parser = parsers[args.parser]
+        colors = 'red green yellow blue magenta cyan light_red light_green light_yellow light_blue light_magenta light_cyan'.split()
+        colorer = parser['module'].__dict__[parser['name']](str(Path(args.data).absolute()),
+                                                            colors)
+        if colorer.check():
+            ranges = colorer.parse()
+            if args.parser_output:
+                with open(args.parser_output, 'w') as fd:
+                    for r in ranges:
+                        fd.write(str(r) + '\n')
+        else:
+            _logger.error('Parser failed; exiting')
+            return
     else:
-        ranges = [ColorRange(0, 4, 'red'),
-                ColorRange(4, 4, 'green'),
-                ColorRange(8, 4, 'blue')]
+        if args.colors:
+            ranges = read_colors_ranges(args.colors)
+        else:
+            # these colors are only here to quickly test the colors
+            ranges = [ColorRange(0, 4, 'red'),
+                    ColorRange(4, 4, 'green'),
+                    ColorRange(8, 4, 'blue')]
     just_fix_windows_console()
 
     # colors can be found here: https://pypi.org/project/termcolor/

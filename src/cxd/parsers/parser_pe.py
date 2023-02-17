@@ -3,15 +3,18 @@ import logging
 import sys
 from itertools import pairwise
 from pathlib import Path
-import pefile
+_logger = logging.getLogger(__name__)
+try:
+    import pefile
+except:
+    _logger.critical('pefile not found. Did you install cxd[parsers]?')
 
-from cxd.colored_hex_dump import ColorRange
+from cxd.color_range import ColorRange
 
 __author__ = "malware4n6"
 __copyright__ = "malware4n6"
 __license__ = "The Unlicense"
 
-_logger = logging.getLogger(__name__)
 
 class PeColorer():
     def __init__(self, path, colors) -> None:
@@ -33,7 +36,7 @@ class PeColorer():
             except:
                 self.pe = None
                 self.__check = False
-                _logger.error(f'Can read {self.path}')
+                _logger.error(f'Cannot read {self.path}')
         return self.__check
 
     def parse(self):
@@ -57,23 +60,28 @@ class PeColorer():
             # some keys may also not exist - or not be in the correct order
             # the following try...except should also be better handled
             file_offsets = []
+            comments = []
             # DOS_HEADER
             for k in ('e_magic', 'e_cblp', 'e_cp', 'e_crlc', 'e_cparhdr', 'e_minalloc', 'e_maxalloc', 'e_ss', 'e_sp', 'e_csum',
                     'e_ip', 'e_cs', 'e_lfarlc', 'e_ovno', 'e_res', 'e_oemid', 'e_oeminfo', 'e_res2', 'e_lfanew'):
                 file_offsets.append(pe_file_dict_data['DOS_HEADER'][k]['FileOffset'])
+                comments.append(f'DOS_HEADER.{k}')
             # NT_HEADERS
             file_offsets.append(pe_file_dict_data['NT_HEADERS']['Signature']['FileOffset'])
+            comments.append('NT_HEADERS.Signature')
             # FILE_HEADER
             for k in ('Machine', 'NumberOfSections', 'TimeDateStamp', 'PointerToSymbolTable', 'NumberOfSymbols', 'SizeOfOptionalHeader', 'Characteristics'):
                 file_offsets.append(pe_file_dict_data['FILE_HEADER'][k]['FileOffset'])
+                comments.append(f'FILE_HEADER.{k}')
 
             # OPTIONAL_HEADER
             for k in ('Magic', 'MajorLinkerVersion', 'MinorLinkerVersion', 'SizeOfCode', 'SizeOfInitializedData', 'SizeOfUninitializedData', 'AddressOfEntryPoint', 'BaseOfCode', 'ImageBase', 'SectionAlignment', 'FileAlignment', 'MajorOperatingSystemVersion', 'MinorOperatingSystemVersion', 'MajorImageVersion', 'MinorImageVersion', 'MajorSubsystemVersion', 'MinorSubsystemVersion', 'Reserved1', 'SizeOfImage', 'SizeOfHeaders', 'CheckSum', 'Subsystem', 'DllCharacteristics', 'SizeOfStackReserve', 'SizeOfStackCommit', 'SizeOfHeapReserve', 'SizeOfHeapCommit', 'LoaderFlags', 'NumberOfRvaAndSizes'):
                 file_offsets.append(pe_file_dict_data['OPTIONAL_HEADER'][k]['FileOffset'])
+                comments.append(f'OPTIONAL_HEADER.{k}')
 
             # consider the offsets read until there
-            for pair in pairwise(file_offsets):
-                self.colors_ranges.append(ColorRange(pair[0], pair[1] - pair[0], self.colors[self.__color_index]))
+            for i, pair in enumerate(pairwise(file_offsets)):
+                self.colors_ranges.append(ColorRange(pair[0], pair[1] - pair[0], self.colors[self.__color_index], comments[i]))
                 self.__color_index = (self.__color_index+1) % len(self.colors)
             # add the imports
             _logger.debug(f'## imports')

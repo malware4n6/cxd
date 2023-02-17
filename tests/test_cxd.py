@@ -4,7 +4,8 @@ __author__ = "malware4n6"
 __copyright__ = "malware4n6"
 __license__ = "MIT"
 
-from cxd.colored_hex_dump import ColoredHexDump, ColorRange
+from cxd.colored_hex_dump import ColoredHexDump
+from cxd.color_range import ColorRange
 from cxd.main import main
 
 data = b'\xc4\xc0q"\x8e\xb4\xc9\x94\x06\x01\x1e0\xca\x15*\x03/L1Ku\x9d1\x16\xe7\x84\xf7^\x90\x161\x89\xc4\xa4[\x9c\r\xf4\xc0\xf1\nf\xa7\xa0\xcd\x85c\x8bw\xa1'
@@ -41,6 +42,13 @@ expected_from_file = '''00000000\t1F C1 2F 70 06 81 06 9D 50 19 89 8B 17 A7 CA E
 000001d0\t8A 52 88 39 5C 37 5F 50 02 FA 5A 10 EC 9A 28 56 \t.R.9\\7_P..Z...(V
 000001e0\t22 1A 29 9F 2A 05 46 13 CD C2 15 5A 8A 7D 65 5F \t".).*.F....Z.}e_
 000001f0\t19 46 A1 5E                                     \t.F.^'''.replace('\n', '')
+
+
+def test_color_range():
+    cr = ColorRange(0, 20, 'blue', 'foobar')
+    assert str(cr) == '0,20,blue,foobar'
+    cr = ColorRange(0, 0x20, 'blue', 'foobar')
+    assert str(cr) == '0,32,blue,foobar'
 
 def test_bad_params():
     ranges = [ColorRange(0, 4, 'red'),
