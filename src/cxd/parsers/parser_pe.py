@@ -15,22 +15,24 @@ __author__ = "malware4n6"
 __copyright__ = "malware4n6"
 __license__ = "The Unlicense"
 
-
 class PeColorer():
     def __init__(self, path, colors) -> None:
         self.colors = colors
         self.colors_ranges = None
+        # if self.colors_ranges is None, then the parser did not do its job yet.
+        # this value is used to be sure the PE is parsed only once.
+        # the method .parse() is responsible for the creation of a list.
+        # if .parse() is called multiple times, only the first call will parse the file,
+        # and the already-generated list will be returned.
         self.path = path
         self.pe = None
         self.__check = None
-        self.__file_length = 0
         self.__color_index = 0
     
     def check(self):
         if self.__check is None:
             try:
                 self.pe = pefile.PE(self.path)
-                self.__file_length = Path(self.path).stat().st_size
                 self.__check = True
                 _logger.info(f'Can read {self.path}')
             except:
