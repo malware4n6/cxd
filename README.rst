@@ -79,14 +79,23 @@ Or if you want to integrate ``cxd`` in your Python code:
     cxd = ColoredHexDump(ranges=ranges, chunk_length=16)
     cxd.print(string.printable.encode())
 
+See the function `ColoredHexDump.__init__` in `src/cxd/colored_hex_dump` to see all options.
+
 Parsers
 =======
 
-For the moment, only one parser exists, and it uses the excellent project https://github.com/erocarrera/pefile
+For the moment, only one *real* parser exists, and it uses the excellent project https://github.com/erocarrera/pefile
 
 ..  code-block:: sh
 
     pip install cxd[parsers]
+
+Available parsers: pe, strings
+
+If you want to add your own parser `foo`, create a script called `parser_foo.py` in src/cxd/parsers.
+Inside, create a class `FooColorer`, with the methods `__init__`, `check` and `parse`, as already done in parser_pe.py and parser_strings.py.
+
+If you need to add some dependencies, add them in the file `setup.cfg`, in the section `[options.extras_require]`, in the `parsers` list.
 
 
 Test
