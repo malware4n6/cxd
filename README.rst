@@ -61,6 +61,7 @@ Columns are under the format "start,length[,color]":
 ..  code-block:: sh
 
     cxd -d path/to/binary/file -c src/cxd/sample_colors_ranges.txt
+    cxd -h
 
 
 Or if you want to integrate ``cxd`` in your Python code:
