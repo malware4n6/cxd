@@ -5,6 +5,7 @@
 import logging
 import string
 from pathlib import Path
+from intervaltree import IntervalTree
 from termcolor import colored
 
 __author__ = "malware4n6"
@@ -18,14 +19,14 @@ class ColoredHexDump():
     # colors can be found here: https://pypi.org/project/termcolor/
     ALLOWED_COLORS = 'black red green yellow blue magenta cyan white light_grey dark_grey light_red light_green light_yellow light_blue light_magenta light_cyan'.split()
 
-    def __init__(self, ranges=None, chunk_length: int=32, replace_not_printable:str='.', column_separator:str='\t', address_shift:int=0,
+    def __init__(self, ranges=None, chunk_length: int=16, replace_not_printable:str='.', column_separator:str='\t', address_shift:int=0,
                 default_color:str='white', shadow_color:str='dark_grey', address_color:str='cyan', title_color:str='dark_grey',
-                enable_shadow_bytes=True,
-                hide_null_lines=True, stop_at_first_color_found=True,
-                memorize_last_color_range=True,
-                show_columns_name_at_start=True,
-                show_columns_name_at_end=True) -> None:
+                enable_shadow_bytes=True, hide_null_lines=True, stop_at_first_color_found=True,
+                show_columns_name_at_start=True, show_columns_name_at_end=True) -> None:
         self.color_ranges = [] if ranges is None else ranges
+        self.color_tree = IntervalTree()
+        for cr in self.color_ranges:
+            self.color_tree[cr.start:cr.end+1] = cr
         self.chunk_length = chunk_length
         assert self.chunk_length > 0
         self.replace_not_printable = replace_not_printable
@@ -51,27 +52,19 @@ class ColoredHexDump():
         # if multiple ranges contain an offset, the user decides whether
         # the first or the last must be selected
         self.stop_at_first_color_found = stop_at_first_color_found
-        # if ranges are ordered, do not lose time to search across all the ranges
-        # and start only from the last range
-        # this may be a problem if the user modify self.color_ranges (i.e out of bound index)
-        self.memorize_last_color_range = memorize_last_color_range
-        self.start_color_ranges = 0
         self.show_columns_name_at_start = show_columns_name_at_start
         self.show_columns_name_at_end = show_columns_name_at_end
 
-    def __get_color_for_offset(self, offset:int, x,
-                                            stop_at_first_color_found):
+    def __get_color_for_offset(self, offset:int, x):
         # x is not a byte because of the use of `enumerate`
         ret = None
 
-        for range_index, color_range in enumerate(self.color_ranges[self.start_color_ranges:],
-                                                start=self.start_color_ranges):
-            if color_range.start <= offset and offset <= color_range.end:
-                ret = color_range.color
-                if self.memorize_last_color_range:
-                    self.start_color_ranges = range_index
-                if stop_at_first_color_found:
-                    break
+        intervals = sorted(self.color_tree[offset])
+        if intervals:
+            if self.stop_at_first_color_found:
+                ret = intervals[0].data.color
+            else:
+                ret = intervals[-1].data.color
 
         # if belongs to a range -> provided color is chosen first
         # if not in a range:
@@ -105,8 +98,7 @@ class ColoredHexDump():
         raw_ascii_content = ''
         # iterate over each byte value in the chunk
         for i, c in enumerate(chunk):
-            color = self.__get_color_for_offset(chunk_offset + i, c,
-                                                self.stop_at_first_color_found)
+            color = self.__get_color_for_offset(chunk_offset + i, c)
             print(colored(f'{c:02X}', color), end='')
             print(' ', end='')
             if chr(c) in self.printable:

@@ -1,13 +1,6 @@
-import logging
-import string
-from pathlib import Path
-from termcolor import colored
-
 __author__ = "malware4n6"
 __copyright__ = "malware4n6"
 __license__ = "The Unlicense"
-
-_logger = logging.getLogger(__name__)
 
 class ColorRange():
     def __init__(self, start, length, color = None, comment = None) -> None:
