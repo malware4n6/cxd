@@ -16,8 +16,9 @@
 
 > Colored heX Dump
 
-## Setup
+![docs/pictures/demo.png](docs/pictures/demo.png)
 
+## Setup
 
 ```shell
 python3 -m venv venv
