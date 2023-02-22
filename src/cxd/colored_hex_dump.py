@@ -13,15 +13,6 @@ __license__ = "The Unlicense"
 
 _logger = logging.getLogger(__name__)
 
-class ColorRange():
-    def __init__(self, start, length, color = None) -> None:
-        self.start = start
-        self.length = length
-        self.color = color
-        # -1 because (start + length) define the first next excluded byte
-        self.end = start + length - 1
-    def __str__(self):
-        return f'{self.start},{self.length},{self.color if self.color else ""}'
 
 class ColoredHexDump():
     # colors can be found here: https://pypi.org/project/termcolor/
