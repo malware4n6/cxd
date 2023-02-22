@@ -31,7 +31,7 @@ pip install -e .
 
 ## Usage
 
-0. Optional. Define a coloration scheme (read src/cxd/sample_colors_ranges.txt if you need an example)
+0. Optional. Define a coloration scheme (read [sample_colors_ranges.txt](src/cxd/sample_colors_ranges.txt) if you need an example).
 
 Columns are under the format "start,length[,color]":
 
@@ -50,7 +50,7 @@ Or if you want to integrate ``cxd`` in your Python code:
 
 ```python
 from colorama import just_fix_windows_console
-from cxd.colored_hex_dump import ColoredHexDump, ColorRange
+from cxd import ColorRange, ColoredHexDump
 import string
 
 # for Windows
@@ -62,11 +62,11 @@ cxd = ColoredHexDump(ranges=ranges, chunk_length=16)
 cxd.print(string.printable.encode())
 ```
 
-See the function `ColoredHexDump.__init__` in `src/cxd/colored_hex_dump` to see all options.
+See the function `ColoredHexDump.__init__` in [colored_hex_dump.py](src/cxd/colored_hex_dump.py) to see all options.
 
 ## Parsers
 
-For the moment, only one *real* parser exists, and it uses the excellent project https://github.com/erocarrera/pefile
+Currently, only one *real* parser exists, and it uses the excellent project [pefile](https://github.com/erocarrera/pefile).
 
 ```shell
 pip install cxd[parsers]
@@ -74,10 +74,10 @@ pip install cxd[parsers]
 
 Available parsers: pe, strings
 
-If you want to add your own parser `foo`, create a script called `parser_foo.py` in src/cxd/parsers.
-Inside, create a class `FooColorer`, with the methods `__init__`, `check` and `parse`, as already done in parser_pe.py and parser_strings.py.
+If you want to add your own parser `foo`, create a script called `parser_foo.py` in [src/cxd/parsers](src/cxd/parsers).
+Inside, create a class `FooColorer`, with the methods `__init__`, `check` and `parse`, as already done in [parser_pe.py](src/cxd/parsers/parser_pe.py) and [parser_strings.py](src/cxd/parsers/parser_strings.py).
 
-If you need to add some dependencies, add them in the file `setup.cfg`, in the section `[options.extras_require]`, in the `parsers` list.
+If you need to add some dependencies, add them in the file [setup.cfg](setup.cfg), in the section `[options.extras_require]`, in the `parsers` list.
 
 
 ## Test

@@ -14,3 +14,6 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 finally:
     del version, PackageNotFoundError
+
+from cxd.color_range import ColorRange
+from cxd.colored_hex_dump import ColoredHexDump

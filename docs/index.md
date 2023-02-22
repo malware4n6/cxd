@@ -1,7 +1,6 @@
 # cxd
 
-Add a short description here!
-
+Colored heX Dump
 
 ## Note
 
