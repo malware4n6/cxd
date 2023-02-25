@@ -76,9 +76,10 @@ cxd_genconf --configuration-path path/to/your/new/configuration.json
 
 A JSON file will be created with some default options.
 
-You can now use this configuration file with the option "-k" / "--configuration".
+You can now use this configuration file with `cxd` and its option "-k" / "--configuration".
 
 Accepted colors can be found [here](https://pypi.org/project/termcolor/); they are:
+
 - "black"
 - "red"
 - "green"
