@@ -1,23 +1,5 @@
 """
-This is a skeleton file that can serve as a starting point for a Python
-console script. To run this script uncomment the following lines in the
-``[options.entry_points]`` section in ``setup.cfg``::
 
-    console_scripts =
-         fibonacci = cxd.skeleton:run
-
-Then run ``pip install .`` (or ``pip install -e .`` for editable mode)
-which will install the command ``fibonacci`` inside your current environment.
-
-Besides console scripts, the header (i.e. until ``_logger``...) of this file can
-also be used as template for Python modules.
-
-Note:
-    This file can be renamed depending on your needs or safely removed if not needed.
-
-References:
-    - https://setuptools.pypa.io/en/latest/userguide/entry_point.html
-    - https://pip.pypa.io/en/stable/reference/pip_install
 """
 
 import argparse
@@ -36,6 +18,7 @@ _logger = logging.getLogger(__name__)
 
 from cxd.colored_hex_dump import ColoredHexDump
 from cxd.color_range import ColorRange
+from cxd.configuration import Configuration
 
 def import_plugins():
     from cxd.parsers.loader import load_parsers
@@ -57,6 +40,7 @@ def parse_args(args):
     parser.add_argument("-c", "--colors",
                         help="path to colors ranges. Each line contains 'offset_start,count,color[,comment]'",
                         type=str)
+    parser.add_argument("-k", "--configuration", help="path to configuration (use `cxd_genconf` to generate it)", type=str)
     parser.add_argument("-p", "--parser", help="parser to use. Takes precedence over option colors", type=str)
     parser.add_argument("-po", "--parser-output", help="location to store parser output", type=str)
     parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
@@ -149,21 +133,18 @@ def main(args):
         if args.colors:
             ranges = read_colors_ranges(args.colors)
         else:
-            # these colors are only here to quickly test the colors
-            ranges = [ColorRange(0, 4, 'red'),
-                    ColorRange(4, 4, 'green'),
-                    ColorRange(8, 4, 'blue')]
+            ranges = []
     just_fix_windows_console()
 
+    config = {}
+    if args.configuration:
+        config = Configuration.parse(args.configuration)
+
     # colors can be found here: https://pypi.org/project/termcolor/
-    cxd = ColoredHexDump(ranges=ranges, chunk_length=16, address_shift=0, # -0x0100,
-                        default_color='white', shadow_color='dark_grey',
-                        address_color='cyan', enable_shadow_bytes=True,
-                        hide_null_lines=True)
+    cxd = ColoredHexDump(ranges=ranges, **config)
     with open(args.data, 'rb') as fd:
         data = fd.read()
     cxd.print(data)
-    # cxd.print_file(args.data)
 
 
 def run():

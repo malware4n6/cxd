@@ -65,6 +65,40 @@ cxd.print(string.printable.encode())
 
 See the function `ColoredHexDump.__init__` in [colored_hex_dump.py](src/cxd/colored_hex_dump.py) to see all options.
 
+## Configuration
+
+Colors are provided to `cxd` with the option "-c".
+You can also modify some settings with a configuration file. To do so:
+
+```shell
+cxd_genconf --configuration-path path/to/your/new/configuration.json
+```
+
+A JSON file will be created with some default options.
+
+You can now use this configuration file with the option "-k" / "--configuration".
+
+Accepted colors can be found [here](https://pypi.org/project/termcolor/); they are:
+- "black"
+- "red"
+- "green"
+- "yellow"
+- "blue"
+- "magenta"
+- "cyan"
+- "white"
+- "light_grey"
+- "dark_grey"
+- "light_red"
+- "light_green"
+- "light_yellow"
+- "light_blue"
+- "light_magenta"
+- "light_cyan"
+
+The explanation for the field "stop_at_first_color_found" is as follows: as multiples colors ranges may hold a perticular offset, this value allows to stop the search at the first result found.
+If it is not set, the last color found is used.
+
 ## Parsers
 
 Currently, only one *real* parser exists, and it uses the excellent project [pefile](https://github.com/erocarrera/pefile).

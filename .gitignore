@@ -52,3 +52,9 @@ MANIFEST
 .venv*/
 .conda*/
 .python-version
+
+# cxd
+tests/*.exe
+tests/*.EXE
+tests/*.dll
+tests/*.DLL
