@@ -20,6 +20,8 @@
 
 ## Setup
 
+Note: the project needs Python 3.10 or superior.
+
 ```shell
 python3 -m venv venv
 . venv/bin/activate
@@ -107,7 +109,10 @@ Currently, only one *real* parser exists, and it uses the excellent project [pef
 pip install cxd[parsers]
 ```
 
-Available parsers: pe, strings
+Available parsers:
+
+- `pe`: works on all systems
+- `strings`: only works on Linux platforms
 
 If you want to add your own parser `foo`, create a script called `parser_foo.py` in [src/cxd/parsers](src/cxd/parsers).
 Inside, create a class `FooColorer`, with the methods `__init__`, `check` and `parse`, as already done in [parser_pe.py](src/cxd/parsers/parser_pe.py) and [parser_strings.py](src/cxd/parsers/parser_strings.py).

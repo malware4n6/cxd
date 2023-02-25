@@ -4,13 +4,10 @@ import sys
 from pathlib import Path
 import subprocess
 
-_logger = logging.getLogger(__name__)
-import platform
-if platform.system() != 'Linux':
-    _logger.error('Linux-only parser')
-    sys.exit('Currently Linux-only parser')
-
+from platform import system as psystem
 from cxd.color_range import ColorRange
+
+_logger = logging.getLogger(__name__)
 
 __author__ = "malware4n6"
 __copyright__ = "malware4n6"
@@ -39,7 +36,11 @@ class StringsColorer():
     
     def check(self):
         if self.__check is None:
-            self.__check = True
+            if psystem() != 'Linux':
+                _logger.error('Parser "strings" only works on Linux systems')
+                self.__check = False    
+            else:
+                self.__check = True
         return self.__check
 
     def parse(self):
