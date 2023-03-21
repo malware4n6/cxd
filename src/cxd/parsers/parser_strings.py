@@ -17,7 +17,7 @@ __license__ = "The Unlicense"
 class StringsColorer():
     """quick win: run 
     - `strings -n 4 -td` and get the output (offset, len(detected_string), color, detected_string as comment)
-    - `strings -el  -n 4 -td` and get the output (offset, 2*len(detected_string), color, detected_string as comment)
+    - `strings -el -n 4 -td` and get the output (offset, 2*len(detected_string), color, detected_string as comment)
     2 * len(detected_string) because `strings`' output is ASCII-encoded and I don't want to write a precise
     all-possible-strings-formats-and-encodings detection tool.
     """
