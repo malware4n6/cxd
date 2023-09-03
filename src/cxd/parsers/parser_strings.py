@@ -15,9 +15,9 @@ __license__ = "The Unlicense"
 
 
 class StringsColorer():
-    """quick win: run 
-    - `strings -n 4 -td` and get the output (offset, len(detected_string), color, detected_string as comment)
-    - `strings -el -n 4 -td` and get the output (offset, 2*len(detected_string), color, detected_string as comment)
+    """quick win: run
+    - `strings -a -n 4 -td` and get the output (offset, len(detected_string), color, detected_string as comment)
+    - `strings -a -el -n 4 -td` and get the output (offset, 2*len(detected_string), color, detected_string as comment)
     2 * len(detected_string) because `strings`' output is ASCII-encoded and I don't want to write a precise
     all-possible-strings-formats-and-encodings detection tool.
     """
@@ -46,7 +46,7 @@ class StringsColorer():
     def parse(self):
         if self.colors_ranges is None:
             self.colors_ranges = []
-            out = subprocess.check_output(['strings', '-n', '4', '-td', str(Path(self.path))])
+            out = subprocess.check_output(['strings', '-a', '-n', '4', '-td', str(Path(self.path))])
             if out:
                 lines = out.decode().split('\n')
                 for curline in lines:
@@ -60,7 +60,7 @@ class StringsColorer():
                                                             self.colors[self.__color_index], detected_string))
                         self.__color_index = (self.__color_index+1) % len(self.colors)
 
-            out = subprocess.check_output(['strings', '-el', '-n', '4', '-td', str(Path(self.path))])
+            out = subprocess.check_output(['strings', '-a', '-el', '-n', '4', '-td', str(Path(self.path))])
             if out:
                 lines = out.decode().split('\n')
                 for curline in lines:
